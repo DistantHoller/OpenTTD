@@ -18,6 +18,7 @@
 #include "video/video_driver.hpp"
 #include "spritecache.h"
 #include "spritecache_internal.h"
+#include "modern_sprite_loader.h"
 
 #include "table/sprites.h"
 #include "table/palette_convert.h"
@@ -481,6 +482,13 @@ static void *ReadSprite(const SpriteCache *sc, SpriteID id, SpriteType sprite_ty
 			SpriteLoaderMakeIndexed make_indexed(sprite_loader);
 			sprite_avail = make_indexed.LoadSprite(sprite, file, file_pos, sprite_type, true, sc->control_flags, sprite_avail, avail_32bpp);
 		}
+	}
+
+	/* Only replace our pinned base art. A NewGRF's own sprites and overrides
+	 * keep their original graphics, remaps, and geometry. */
+	if (sprite_type == SpriteType::Normal && encoder->Is32BppSupported() &&
+			(file.GetSimplifiedFilename() == "ogfx21_base_32ez" || file.GetSimplifiedFilename() == "ogfx2e_extra_32ez")) {
+		ModernLoadSprite(id, sprite, sprite_avail);
 	}
 
 	if (sprite_avail.None()) {

@@ -20,6 +20,7 @@
 #include "core/geometry_func.hpp"
 #include "settings_type.h"
 #include "querystring_gui.h"
+#include "modern_theme.h"
 
 #include "table/sprites.h"
 #include "table/strings.h"
@@ -307,6 +308,10 @@ WidgetID GetWidgetFromPos(const Window *w, int x, int y)
  */
 void DrawFrameRect(int left, int top, int right, int bottom, Colours colour, FrameFlags flags)
 {
+	if (ModernInterfaceEnabled() && !flags.Test(FrameFlag::Transparent)) {
+		ModernDrawFrame({left, top, right, bottom}, flags.Test(FrameFlag::Lowered), flags.Test(FrameFlag::Darkened), flags.Test(FrameFlag::BorderOnly));
+		return;
+	}
 	if (flags.Test(FrameFlag::Transparent)) {
 		GfxFillRect(left, top, right, bottom, PALETTE_TO_TRANSPARENT, FillRectMode::Recolour);
 	} else {
@@ -373,6 +378,7 @@ static inline void DrawImageButtons(const Rect &r, WidgetType type, Colours colo
 	DrawFrameRect(r, colour, clicked ? FrameFlag::Lowered : FrameFlags{});
 
 	if ((type & WWT_MASK) == WWT_IMGBTN_2 && clicked) img++; // Show different image when clicked for #WWT_IMGBTN_2.
+	if (ModernDrawIcon(img, r, align)) return;
 	DrawSpriteIgnorePadding(img, PAL_NONE, r, align);
 }
 
@@ -390,6 +396,7 @@ static inline void DrawImageButtons(const Rect &r, WidgetType type, Colours colo
 static inline void DrawImageTextButtons(const Rect &r, Colours colour, bool clicked, SpriteID img, TextColour text_colour, const std::string &text, Alignment align, FontSize fs)
 {
 	DrawFrameRect(r, colour, clicked ? FrameFlag::Lowered : FrameFlags{});
+	if (ModernInterfaceEnabled() && colour == Colours::Orange && !clicked) ModernFillRect(r.Shrink(std::max(1, ScaleGUITrad(1))), ModernColours::Selected);
 
 	bool rtl = _current_text_dir == TD_RTL;
 	int image_width = img != 0 ? std::max<int>(GetSquareScaledSpriteSize(img).width, r.Shrink(WidgetDimensions::scaled.framerect).Height()) : 0;
@@ -397,7 +404,7 @@ static inline void DrawImageTextButtons(const Rect &r, Colours colour, bool clic
 	Rect r_text = r.Shrink(WidgetDimensions::scaled.framerect).Indent(image_width + WidgetDimensions::scaled.hsep_wide, rtl);
 
 	if (img != 0) {
-		DrawSpriteIgnorePadding(img, PAL_NONE, r_img, {AlignmentH::Centre, align.v});
+		if (!ModernDrawIcon(img, r_img, {AlignmentH::Centre, align.v})) DrawSpriteIgnorePadding(img, PAL_NONE, r_img, {AlignmentH::Centre, align.v});
 	}
 
 	if (!text.empty()) {
@@ -743,6 +750,17 @@ static inline void DrawCloseBox(const Rect &r, Colours colour)
  */
 void DrawCaption(const Rect &r, Colours colour, Owner owner, TextColour text_colour, std::string_view str, Alignment align, FontSize fs)
 {
+	if (ModernInterfaceEnabled()) {
+		ModernFillRect(r, ModernColours::Forest);
+		if (owner < MAX_COMPANIES) {
+			int stripe = std::max(2, ScaleGUITrad(3));
+			GfxFillRect(r.left, r.top, r.left + stripe - 1, r.bottom, GetColourGradient(_company_colours[owner], Shade::Normal));
+		}
+		Dimension d = GetStringBoundingBox(str, fs);
+		Point p = GetAlignedPosition(r, d, align);
+		DrawString(r.left + WidgetDimensions::scaled.captiontext.left, r.right - WidgetDimensions::scaled.captiontext.right, p.y, str, {TextColour::White, ExtendedTextColourFlag::NoShade}, align, false, fs);
+		return;
+	}
 	bool company_owned = owner < MAX_COMPANIES;
 
 	DrawFrameRect(r, colour, FrameFlag::BorderOnly);

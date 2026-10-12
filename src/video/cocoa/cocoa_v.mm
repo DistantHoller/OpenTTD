@@ -386,7 +386,7 @@ bool VideoDriver_Cocoa::MakeWindow(int width, int height)
 	[ this->window setDelegate:this->delegate ];
 
 	[ this->window center ];
-	[ this->window makeKeyAndOrderFront:nil ];
+	if (this->WantsVisibleWindow()) [ this->window makeKeyAndOrderFront:nil ];
 
 	/* Create wrapper view for input and event handling. */
 	NSRect view_frame = [ this->window contentRectForFrameRect:[ this->window frame ] ];

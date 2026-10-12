@@ -30,6 +30,8 @@
 #include "signs_base.h"
 #include "viewport_func.h"
 #include "vehicle_base.h"
+#include "modern_theme.h"
+#include "zoom_func.h"
 #include <regex>
 
 #include "widgets/intro_widget.h"
@@ -250,6 +252,15 @@ struct SelectGameWindow : public Window {
 	void DrawWidget(const Rect &r, WidgetID widget) const override
 	{
 		switch (widget) {
+			case WID_SGI_MODERN_HERO:
+				ModernDrawWelcome(r);
+				break;
+			case WID_SGI_MODERN_TITLE:
+				DrawString(r.Shrink(ScaleGUITrad(8)), STR_MODERN_TITLE, TextColour::Black, {AlignmentH::Start, AlignmentV::Middle}, false, FontSize::Large);
+				break;
+			case WID_SGI_MODERN_FOOTER:
+				DrawStringMultiLine(r.Shrink(ScaleGUITrad(8)), STR_MODERN_SUBTITLE, TextColour::Black, {AlignmentH::Start, AlignmentV::Middle});
+				break;
 			case WID_SGI_BASESET:
 				DrawStringMultiLine(r, GetString(STR_INTRO_BASESET, _missing_extra_graphics), TextColour::FromString, {AlignmentH::Centre, AlignmentV::Middle});
 				break;
@@ -373,11 +384,50 @@ static constexpr std::initializer_list<NWidgetPart> _nested_select_game_widgets 
 };
 
 /** Window definition for the select game window. */
+#ifdef MODERN_EDITION
+static constexpr std::initializer_list<NWidgetPart> _nested_modern_select_game_widgets = {
+	NWidget(WWT_PANEL, Colours::Grey),
+		NWidget(NWID_VERTICAL), SetPIP(0, 8, 0), SetPadding(10),
+			NWidget(WWT_EMPTY, Colours::Invalid, WID_SGI_MODERN_HERO), SetMinimalSize(460, 160), SetFill(1, 0),
+			NWidget(WWT_EMPTY, Colours::Invalid, WID_SGI_MODERN_TITLE), SetMinimalSize(460, 28), SetFill(1, 0),
+			NWidget(WWT_EMPTY, Colours::Invalid, WID_SGI_MODERN_FOOTER), SetMinimalSize(460, 22), SetFill(1, 0),
+			NWidget(NWID_HORIZONTAL), SetPIP(0, 8, 0),
+				NWidget(NWID_VERTICAL), SetPIP(0, 6, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_GENERATE_GAME), SetMinimalSize(225, 30), SetSpriteStringTip(SPR_IMG_LANDSCAPING, STR_INTRO_NEW_GAME, STR_INTRO_TOOLTIP_NEW_GAME), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_PLAY_SCENARIO), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_SUBSIDIES, STR_INTRO_PLAY_SCENARIO, STR_INTRO_TOOLTIP_PLAY_SCENARIO), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_PLAY_NETWORK), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_COMPANY_GENERAL, STR_INTRO_MULTIPLAYER, STR_INTRO_TOOLTIP_MULTIPLAYER), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_OPTIONS), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_SETTINGS, STR_INTRO_GAME_OPTIONS, STR_INTRO_TOOLTIP_GAME_OPTIONS), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_EDIT_SCENARIO), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_SMALLMAP, STR_INTRO_SCENARIO_EDITOR, STR_INTRO_TOOLTIP_SCENARIO_EDITOR), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+				EndContainer(),
+				NWidget(NWID_VERTICAL), SetPIP(0, 6, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Orange, WID_SGI_LOAD_GAME), SetMinimalSize(225, 30), SetSpriteStringTip(SPR_IMG_SAVE, STR_INTRO_LOAD_GAME, STR_INTRO_TOOLTIP_LOAD_GAME), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_PLAY_HEIGHTMAP), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_SHOW_COUNTOURS, STR_INTRO_PLAY_HEIGHTMAP, STR_INTRO_TOOLTIP_PLAY_HEIGHTMAP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_CONTENT_DOWNLOAD), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_SHOW_VEHICLES, STR_INTRO_ONLINE_CONTENT, STR_INTRO_TOOLTIP_ONLINE_CONTENT), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_HIGHSCORE), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_COMPANY_LEAGUE, STR_INTRO_HIGHSCORE, STR_INTRO_TOOLTIP_HIGHSCORE), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+					NWidget(WWT_PUSHIMGTEXTBTN, Colours::Grey, WID_SGI_HELP), SetMinimalSize(225, 26), SetSpriteStringTip(SPR_IMG_QUERY, STR_INTRO_HELP, STR_INTRO_TOOLTIP_HELP), SetAlignment({AlignmentH::Start, AlignmentV::Middle}), SetFill(1, 0),
+				EndContainer(),
+			EndContainer(),
+			NWidget(NWID_SELECTION, Colours::Invalid, WID_SGI_BASESET_SELECTION),
+				NWidget(WWT_EMPTY, Colours::Invalid, WID_SGI_BASESET), SetFill(1, 0),
+			EndContainer(),
+			NWidget(NWID_SELECTION, Colours::Invalid, WID_SGI_TRANSLATION_SELECTION),
+				NWidget(WWT_EMPTY, Colours::Invalid, WID_SGI_TRANSLATION), SetFill(1, 0),
+			EndContainer(),
+			NWidget(WWT_PUSHTXTBTN, Colours::Grey, WID_SGI_EXIT), SetMinimalSize(100, 22), SetStringTip(STR_INTRO_QUIT, STR_INTRO_TOOLTIP_QUIT), SetFill(1, 0),
+		EndContainer(),
+	EndContainer(),
+};
+#endif
+
 static WindowDesc _select_game_desc(
 	WindowPosition::Center, {}, 0, 0,
 	WindowClass::SelectGame, WindowClass::None,
 	WindowDefaultFlag::NoClose,
+#ifdef MODERN_EDITION
+	_nested_modern_select_game_widgets
+#else
 	_nested_select_game_widgets
+#endif
 );
 
 void ShowSelectGameWindow()

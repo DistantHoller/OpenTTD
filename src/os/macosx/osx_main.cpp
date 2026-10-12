@@ -22,6 +22,9 @@
 
 void CocoaSetupAutoreleasePool();
 void CocoaReleaseAutoreleasePool();
+#ifdef MODERN_EDITION
+std::string PrepareModernProfile();
+#endif
 
 int CDECL main(int argc, char *argv[])
 {
@@ -37,6 +40,16 @@ int CDECL main(int argc, char *argv[])
 	if (params.size() >= 2 && params[1].starts_with("-psn")) {
 		params.resize(1);
 	}
+
+#ifdef MODERN_EDITION
+	std::string profile;
+	bool explicit_config = std::find(params.begin(), params.end(), "-c") != params.end();
+	bool help = std::find(params.begin(), params.end(), "-h") != params.end();
+	if (!explicit_config && !help) {
+		profile = PrepareModernProfile();
+		if (!profile.empty()) { params.emplace_back("-c"); params.emplace_back(profile); }
+	}
+#endif
 
 	CrashLog::InitialiseCrashLog();
 

@@ -203,6 +203,14 @@ add_files(
     genworld.h
     genworld_gui.cpp
     gfx.cpp
+    modern_theme.cpp
+    modern_theme.h
+    modern_soundscape.cpp
+    modern_soundscape.h
+    modern_sprite_loader.cpp
+    modern_sprite_loader.h
+    modern_showcase.cpp
+    modern_showcase.h
     gfx_func.h
     gfx_layout.cpp
     gfx_layout.h

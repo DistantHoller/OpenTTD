@@ -207,7 +207,7 @@ public:
 
 		/* Might be a font file name, try load it. */
 		CFAutoRelease<CTFontDescriptorRef> font_ref(LoadFontFromFile(font_name));
-		if (!font_ref) ShowInfo("Unable to load file '{}' for {} font, using default OS font selection instead", font_name, FontSizeToName(fs));
+		if (!font_ref && !search) ShowInfo("Unable to load file '{}' for {} font, using default OS font selection instead", font_name, FontSizeToName(fs));
 
 		if (!font_ref && search) {
 			CFAutoRelease<CFStringRef> name(CFStringCreateWithCString(kCFAllocatorDefault, font_name.c_str(), kCFStringEncodingUTF8));

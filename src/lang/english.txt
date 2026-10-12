@@ -2257,6 +2257,39 @@ STR_VIDEO_DRIVER_ERROR_HARDWARE_ACCELERATION_CRASH              :GPU driver cras
 
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD
+STR_MODERN_TITLE                                                :{BLACK}OpenTTD
+STR_MODERN_SUBTITLE                                             :{BLACK}Build connections. Shape a living world.
+STR_MODERN_TOOL_PAUSE                                           :Pause
+STR_MODERN_TOOL_SPEED                                           :Speed
+STR_MODERN_TOOL_SETTINGS                                        :Settings
+STR_MODERN_TOOL_SAVE                                            :Save
+STR_MODERN_TOOL_MAP                                             :Map
+STR_MODERN_TOOL_TOWNS                                           :Towns
+STR_MODERN_TOOL_SUBSIDIES                                       :Offers
+STR_MODERN_TOOL_STATIONS                                        :Stations
+STR_MODERN_TOOL_FINANCES                                        :Finance
+STR_MODERN_TOOL_COMPANIES                                       :Company
+STR_MODERN_TOOL_STORY                                           :Story
+STR_MODERN_TOOL_GOALS                                           :Goals
+STR_MODERN_TOOL_GRAPHS                                          :Graphs
+STR_MODERN_TOOL_LEAGUE                                          :Rank
+STR_MODERN_TOOL_INDUSTRY                                        :Industry
+STR_MODERN_TOOL_TRAINS                                          :Trains
+STR_MODERN_TOOL_ROADVEHS                                        :Vehicles
+STR_MODERN_TOOL_SHIPS                                           :Ships
+STR_MODERN_TOOL_AIRCRAFT                                        :Aircraft
+STR_MODERN_TOOL_ZOOM_IN                                         :Zoom +
+STR_MODERN_TOOL_ZOOM_OUT                                        :Zoom -
+STR_MODERN_TOOL_RAIL                                            :Rail
+STR_MODERN_TOOL_ROAD                                            :Road
+STR_MODERN_TOOL_TRAM                                            :Tram
+STR_MODERN_TOOL_WATER                                           :Water
+STR_MODERN_TOOL_AIR                                             :Air
+STR_MODERN_TOOL_LAND                                            :Land
+STR_MODERN_TOOL_SOUND                                           :Sound
+STR_MODERN_TOOL_NEWS                                            :News
+STR_MODERN_TOOL_HELP                                            :Help
+STR_MODERN_TOOL_MORE                                            :More
 STR_INTRO_VERSION                                               :OpenTTD {REV}
 
 STR_INTRO_NEW_GAME                                              :{BLACK}New Game

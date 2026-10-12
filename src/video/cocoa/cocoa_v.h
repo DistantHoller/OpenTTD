@@ -86,6 +86,8 @@ protected:
 	 * @return The allocated view.
 	 */
 	virtual NSView *AllocateDrawView() = 0;
+	/** Development rendering can retain native geometry without showing a window. */
+	virtual bool WantsVisibleWindow() const { return true; }
 
 	/**
 	 * Get a pointer to the video buffer.

@@ -8,6 +8,8 @@
 /** @file toolbar_gui.cpp Code related to the (main) toolbar. */
 
 #include "stdafx.h"
+#include "modern_theme.h"
+#include "zoom_func.h"
 #include "core/geometry_func.hpp"
 #include "gui.h"
 #include "spritecache.h"
@@ -1520,6 +1522,40 @@ public:
 
 /** Container for the 'normal' main toolbar */
 class NWidgetMainToolbarContainer : public NWidgetToolbarContainer {
+	uint modern_columns = 15, modern_row_height = 0;
+
+	void SetupSmallestSize(Window *w) override
+	{
+		NWidgetToolbarContainer::SetupSmallestSize(w);
+		if (!ModernInterfaceEnabled()) return;
+		this->modern_row_height = this->smallest_y;
+		uint available = std::max(1u, uint(_screen.width) / std::max(this->smallest_x, uint(ScaleGUITrad(62))));
+		uint rows = CeilDiv(uint(WID_TN_SWITCH_BAR), std::min(available, uint(WID_TN_SWITCH_BAR)));
+		this->modern_columns = CeilDiv(uint(WID_TN_SWITCH_BAR), rows);
+		this->smallest_y = this->modern_row_height * rows;
+		_toolbar_width = _screen.width;
+	}
+
+	void AssignSizePosition(SizingType sizing, int x, int y, uint width, uint height, bool rtl) override
+	{
+		if (!ModernInterfaceEnabled()) { NWidgetToolbarContainer::AssignSizePosition(sizing, x, y, width, height, rtl); return; }
+		this->pos_x = x; this->pos_y = y; this->current_x = width; this->current_y = height;
+		_toolbar_mode = ToolbarMode::Normal;
+		uint index = 0;
+		for (const auto &child : this->children) {
+			child->current_x = 0;
+			if (child->type == NWID_SPACER) continue;
+			auto *core = static_cast<NWidgetCore *>(child.get());
+			if (core->GetIndex() == WID_TN_SWITCH_BAR) continue;
+			uint column = index % this->modern_columns;
+			if (rtl) column = this->modern_columns - 1 - column;
+			uint left = width * column / this->modern_columns;
+			uint right = width * (column + 1) / this->modern_columns;
+			child->AssignSizePosition(sizing, x + left, y + index / this->modern_columns * this->modern_row_height, right - left, this->modern_row_height, rtl);
+			++index;
+		}
+	}
+
 	const WidgetID *GetButtonArrangement(uint &width, uint &arrangeable_count, uint &button_count, uint &spacer_count) const override
 	{
 		static const uint SMALLEST_ARRANGEMENT = 14;
@@ -2004,6 +2040,13 @@ static ToolbarButtonProc * const _toolbar_button_procs[] = {
 
 /** Main toolbar. */
 struct MainToolbarWindow : Window {
+	void DrawWidget(const Rect &r, WidgetID widget) const override
+	{
+		if (!ModernInterfaceEnabled() || widget < 0 || widget >= WID_TN_END) return;
+		Rect label = {r.left + ScaleGUITrad(2), r.bottom - GetCharacterHeight(FontSize::Small) - ScaleGUITrad(3), r.right - ScaleGUITrad(2), r.bottom};
+		DrawString(label, STR_MODERN_TOOL_PAUSE + widget, {TextColour::Black, ExtendedTextColourFlag::NoShade}, AlignmentH::Centre, false, FontSize::Small);
+	}
+
 	MainToolbarWindow(WindowDesc &desc) : Window(desc)
 	{
 		this->InitNested(0);
@@ -2033,6 +2076,7 @@ struct MainToolbarWindow : Window {
 		this->SetWidgetDisabledState(WID_TN_GOAL, Goal::GetNumItems() == 0);
 		this->SetWidgetDisabledState(WID_TN_STORY, StoryPage::GetNumItems() == 0);
 
+		if (ModernInterfaceEnabled()) ModernFillRect({0, 0, this->width - 1, this->height - 1}, ModernColours::Paper);
 		this->DrawWidgets();
 	}
 
@@ -2254,6 +2298,10 @@ static std::unique_ptr<NWidgetBase> MakeMainToolbar()
 		}
 		auto leaf = std::make_unique<NWidgetLeaf>(tp, Colours::Grey, widget, WidgetData{.sprite = sprite}, STR_TOOLBAR_TOOLTIP_PAUSE_GAME + widget);
 		leaf->SetToolbarMinimalSize(1);
+		if (ModernInterfaceEnabled()) {
+			leaf->SetMinimalSize(62, 40);
+			leaf->SetAlignment({AlignmentH::Centre, AlignmentV::Top});
+		}
 		hor->Add(std::move(leaf));
 	}
 

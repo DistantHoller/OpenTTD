@@ -13,6 +13,7 @@
 #include "core/math_func.hpp"
 #include "framerate_type.h"
 #include "mixer.h"
+#include "modern_soundscape.h"
 
 #include "safeguards.h"
 
@@ -35,11 +36,11 @@ struct MixerChannel {
 	bool is16bit;
 };
 
-using MixerChannelMask = uint8_t; ///< Type representing a bitmask of mixer channels.
+using MixerChannelMask = uint32_t; ///< 32 simultaneous sound effects.
 
 static std::atomic<MixerChannelMask> _active_channels;
 static std::atomic<MixerChannelMask> _stop_channels;
-static MixerChannel _channels[8];
+static MixerChannel _channels[32];
 static uint32_t _play_rate = 11025;
 static uint32_t _max_size = UINT_MAX;
 static MxStreamCallback _music_stream = nullptr;
@@ -68,7 +69,7 @@ static int RateConversion(T *b, int frac_pos)
 }
 
 template <typename T>
-static void mix_int16(MixerChannel *sc, int16_t *buffer, uint samples, uint8_t effect_vol)
+static void mix_int32(MixerChannel *sc, int32_t *buffer, uint samples, uint8_t effect_vol)
 {
 	/* Shift required to get sample value into range for the data type. */
 	const uint SHIFT = sizeof(T) * CHAR_BIT;
@@ -86,16 +87,16 @@ static void mix_int16(MixerChannel *sc, int16_t *buffer, uint samples, uint8_t e
 	if (frac_speed == 0x10000) {
 		/* Special case when frac_speed is 0x10000 */
 		do {
-			buffer[0] = Clamp(buffer[0] + (*b * volume_left  >> SHIFT), -MAX_VOLUME, MAX_VOLUME);
-			buffer[1] = Clamp(buffer[1] + (*b * volume_right >> SHIFT), -MAX_VOLUME, MAX_VOLUME);
+			buffer[0] += *b * volume_left >> SHIFT;
+			buffer[1] += *b * volume_right >> SHIFT;
 			b++;
 			buffer += 2;
 		} while (--samples > 0);
 	} else {
 		do {
 			int data = RateConversion(b, frac_pos);
-			buffer[0] = Clamp(buffer[0] + (data * volume_left  >> SHIFT), -MAX_VOLUME, MAX_VOLUME);
-			buffer[1] = Clamp(buffer[1] + (data * volume_right >> SHIFT), -MAX_VOLUME, MAX_VOLUME);
+			buffer[0] += data * volume_left >> SHIFT;
+			buffer[1] += data * volume_right >> SHIFT;
 			buffer += 2;
 			frac_pos += frac_speed;
 			b += frac_pos >> 16;
@@ -155,16 +156,29 @@ void MxMixSamples(void *buffer, uint samples)
 	                    effect_vol_setting *
 	                    effect_vol_setting) / (127 * 127);
 
-	/* Mix each channel */
+	/* Accumulate in 32 bits and saturate once. Per-channel clipping distorts
+	 * overlapping effects and makes the result depend on channel order.
+	 * A fixed scratch block keeps allocation out of the audio callback. */
 	MixerChannelMask active = _active_channels.load(std::memory_order_acquire);
-	for (uint8_t idx : SetBitIterator(active)) {
-		MixerChannel *mc = &_channels[idx];
-		if (mc->is16bit) {
-			mix_int16<int16_t>(mc, (int16_t*)buffer, samples, effect_vol);
-		} else {
-			mix_int16<int8_t>(mc, (int16_t*)buffer, samples, effect_vol);
+	std::array<int32_t, 512> scratch;
+	auto *output = static_cast<int16_t *>(buffer);
+	for (uint offset = 0; offset < samples; offset += 256) {
+		uint block = std::min(256u, samples - offset);
+		std::copy_n(output + offset * 2, block * 2, scratch.begin());
+		for (uint8_t idx : SetBitIterator(active)) {
+			MixerChannel *mc = &_channels[idx];
+			if (mc->samples_left == 0) continue;
+			if (mc->is16bit) {
+				mix_int32<int16_t>(mc, scratch.data(), block, effect_vol);
+			} else {
+				mix_int32<int8_t>(mc, scratch.data(), block, effect_vol);
+			}
+			if (mc->samples_left == 0) MxCloseChannel(idx);
 		}
-		if (mc->samples_left == 0) MxCloseChannel(idx);
+#ifdef MODERN_EDITION
+		ModernMixSoundscape(scratch.data(), block, _play_rate, effect_vol / 255.0f);
+#endif
+		for (uint i = 0; i < block * 2; ++i) output[offset * 2 + i] = Clamp(scratch[i], -MAX_VOLUME, MAX_VOLUME);
 	}
 }
 

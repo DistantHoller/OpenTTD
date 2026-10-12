@@ -15,3 +15,8 @@ add_files(
 if(APPLE)
     target_sources(openttd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/osx_main.cpp)
 endif()
+
+add_files(
+    modern_profile.mm
+    CONDITION APPLE AND OPTION_MODERN_EDITION
+)

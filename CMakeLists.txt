@@ -23,7 +23,14 @@ if (EMSCRIPTEN)
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
+if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15)
+endif()
+
+option(OPTION_MODERN_EDITION "Build the modern macOS presentation" OFF)
+if(OPTION_MODERN_EDITION)
+    add_compile_definitions(MODERN_EDITION)
+endif()
 
 # Use GNUInstallDirs to allow customisation
 # but set our own default data and bin dir
@@ -167,6 +174,10 @@ if(APPLE)
     find_library(AUDIOUNIT_LIBRARY AudioUnit)
     find_library(COCOA_LIBRARY Cocoa)
     find_library(QUARTZCORE_LIBRARY QuartzCore)
+    if(OPTION_MODERN_EDITION)
+        find_library(METAL_LIBRARY Metal REQUIRED)
+        link_libraries(${METAL_LIBRARY})
+    endif()
 endif()
 
 if(NOT EMSCRIPTEN AND NOT OPTION_DEDICATED)

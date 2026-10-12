@@ -52,7 +52,13 @@ std::optional<std::string_view> SoundDriver_Cocoa::Start(const StringList &parm)
 	requestedDesc.mFormatID = kAudioFormatLinearPCM;
 	requestedDesc.mFormatFlags = kLinearPCMFormatFlagIsPacked;
 	requestedDesc.mChannelsPerFrame = 2;
-	requestedDesc.mSampleRate = GetDriverParamInt(parm, "hz", 44100);
+	requestedDesc.mSampleRate = GetDriverParamInt(parm, "hz",
+#ifdef MODERN_EDITION
+		48000
+#else
+		44100
+#endif
+	);
 
 	requestedDesc.mBitsPerChannel = 16;
 	requestedDesc.mFormatFlags |= kLinearPCMFormatFlagIsSignedInteger;

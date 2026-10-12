@@ -27,6 +27,9 @@ enum SelectGameIntroWidgets : WidgetID {
 	WID_SGI_HELP,                  ///< Help and manuals button.
 	WID_SGI_CONTENT_DOWNLOAD,      ///< Content Download button.
 	WID_SGI_EXIT,                  ///< Exit button.
+	WID_SGI_MODERN_HERO,           ///< Modern welcome illustration.
+	WID_SGI_MODERN_TITLE,          ///< Modern welcome heading.
+	WID_SGI_MODERN_FOOTER,         ///< Modern welcome subtitle.
 };
 
 #endif /* WIDGETS_INTRO_WIDGET_H */

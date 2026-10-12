@@ -7,6 +7,11 @@ set(CPACK_DMG_BACKGROUND_IMAGE "${CMAKE_SOURCE_DIR}/os/macosx/splash.png")
 set(CPACK_BUNDLE_APPLE_ENTITLEMENTS "${CMAKE_SOURCE_DIR}/os/macosx/openttd.entitlements")
 set(CPACK_DMG_FORMAT "UDBZ")
 
+# The install step removes build rpaths before BundleUtilities resolves dylibs.
+# Give it the selected dependency locations, including locally built libraries.
+get_filename_component(BUNDLE_PNG_DIR "${PNG_LIBRARY_RELEASE}" DIRECTORY)
+get_filename_component(BUNDLE_LZO_DIR "${LZO_LIBRARY}" DIRECTORY)
+
 # Create a temporary Info.plist.in, where we will fill in the version via
 # CPackProperties.cmake.in. This because at this point in time the version
 # is not yet known.
@@ -20,7 +25,7 @@ install(
     "
         include(BundleUtilities)
         set(BU_CHMOD_BUNDLE_ITEMS TRUE)
-        fixup_bundle(\"\${CMAKE_INSTALL_PREFIX}/../MacOS/openttd\"  \"\" \"\")
+        fixup_bundle(\"\${CMAKE_INSTALL_PREFIX}/../MacOS/openttd\"  \"\" \"${BUNDLE_PNG_DIR};${BUNDLE_LZO_DIR}\")
     "
     DESTINATION .
     COMPONENT Runtime)
